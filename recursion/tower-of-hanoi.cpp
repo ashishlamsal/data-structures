@@ -1,7 +1,7 @@
 #include <iostream>
 
 void towerOfHanoi(int n, char from_rod, char aux_rod, char to_rod){
-    if (n==1){
+    if (n == 1){
         std::cout << "Move disk "<< n << " from " << from_rod << " to " << to_rod << std::endl;
         return;
     }
