@@ -284,7 +284,6 @@ template <typename ValueType>
 ValueType& Vector<ValueType>::operator[](int index) {
     if (index < 0 || index >= count)
         throw std::out_of_range("Selection index out of range");
-    //return elements[index];
     return const_cast<ValueType&>(static_cast<const Vector&>(*this)[index]);
 }
 
@@ -333,7 +332,6 @@ void Vector<ValueType>::deepCopy(const Vector& src) {
 
 template <typename ValueType>
 void Vector<ValueType>::expandCapacity() {
-
     capacity = std::max(1, capacity * 2);
     ValueType* array = new ValueType[capacity];
     for (int i = 0; i < count; i++) {
@@ -342,6 +340,4 @@ void Vector<ValueType>::expandCapacity() {
     if (elements != nullptr)
         delete[] elements;
     elements = array;
-    std::cout << "Copied  ";
-    std::cout << "Capacity :" << capacity << std::endl;
 }
