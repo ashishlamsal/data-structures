@@ -315,11 +315,13 @@ void LinkedList<T>::deleteAt(int pos)
 			return;
 		}
 	}
-	if (current == head)
-	{ // delete first element
-	
-		head = current->next;
-		head->prev = nullptr;
+	if (current == head) { // delete first element
+		if (head == tail)
+			head = tail = nullptr;
+		else {
+			head = current->next;
+			head->prev = nullptr;
+		}
 	}
 	else if (current == tail)
 	{ // delete last element
