@@ -3,6 +3,7 @@
 #include <exception>
 #include <climits>
 #include <vector>
+#include <queue>
 
 template <class T>
 class BinaryTree {
@@ -28,7 +29,8 @@ private:
     int minValue(Node*);
     int minBST(Node*);
     int maxBST(Node*);
-
+    int totalNodes(Node*);
+    
     bool equals(Node*, Node*);
     bool isBinarySearchTree(Node*, int, int);
     void getNodesAtDistance(Node*, int, std::vector<T>&);
@@ -48,11 +50,13 @@ public:
 
     // Breadth-First Traversal
     void TraverseLevelOrder();
+    void BFS();
 
     int height();
     int minValue();
     int minBST();
     int maxBST();
+    int totalNodes();
 
     bool equals(const BinaryTree<T>&);
     bool isBinarySearchTree();
@@ -256,6 +260,18 @@ int BinaryTree<T>::maxBST(Node* root) {
 }
 
 template <class T>
+int BinaryTree<T>::totalNodes() {
+    return totalNodes(root);
+}
+
+template <class T>
+int BinaryTree<T>::totalNodes(Node* root) {
+    if (root == nullptr)
+        return 0;
+    return totalNodes(root->leftChild) + totalNodes(root->rightChild) + 1;
+}
+
+template <class T>
 bool BinaryTree<T>::equals(const BinaryTree<T>& tree) {
     return equals(root, tree.root);
 }
@@ -320,6 +336,28 @@ void BinaryTree<T>::TraverseLevelOrder() {
     std::cout << "\b\b  ]\n";
 };
 
+
+template <class T>
+void BinaryTree<T>::BFS() {
+    if (root == nullptr)
+        return;
+
+    std::queue<Node*> q;
+    q.push(root);
+
+    while (!q.empty()) {
+        Node* node = q.front();
+        q.pop();
+
+        std::cout << node->value << std::endl;
+
+        if (node->leftChild != nullptr)
+            q.push(node->leftChild);
+        if (node->rightChild != nullptr)
+            q.push(node->rightChild);
+    }
+};
+
 int main() {
     try {
         BinaryTree<int> tree;
@@ -350,12 +388,13 @@ int main() {
         tree.TraverseInOrder();
         tree.TraversePostOrder();
         tree.TraverseLevelOrder();
-
-
+        tree.BFS();
+        
         std::cout << "Height of Tree : " << tree.height() << std::endl;
         std::cout << "Minimum value of Tree : " << tree.minValue() << std::endl;
-        std::cout << "Minimum value of BSTree : " << tree.minBST() << std::endl;
-        std::cout << "Maximum value of BSTree : " << tree.maxBST() << std::endl;
+        std::cout << "Minimum value of BST : " << tree.minBST() << std::endl;
+        std::cout << "Maximum value of BST : " << tree.maxBST() << std::endl;
+        std::cout << "Total number of nodes in BST : " << tree.totalNodes() << std::endl;
 
         int distance = 2;
         std::vector<int> list = tree.getNodesAtDistance(distance);
