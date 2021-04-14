@@ -1,7 +1,5 @@
 #pragma once
 
-//#include <iterator>
-
 #include "Vector.h"
 #include "HashCode.h"
 

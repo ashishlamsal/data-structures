@@ -1,3 +1,5 @@
+// MinHeap using array 
+
 #include <iostream>
 
 const int MAXSIZE = 10;
