@@ -7,7 +7,7 @@
 #include <set>
 #include <list>
 
-class Graph {
+class DiGraph {
 private:
     class Node {
     public:
@@ -15,15 +15,19 @@ private:
         Node(const std::string& label) :label(label) {}
     };
 
-    // use map for fast lookup insted of a list of nodes
+    // use map for fast lookup instead of a list of nodes
     std::unordered_map<std::string, Node*> nodes;
 
     // list of lists of adjacent node
     // eg. Node A = [B,C,D] where, B,C,D are adjacent to A
     std::unordered_map<Node*, std::list<Node*>> adjacencyList;
 
+private:
     void depthFirstTraversalRec(Node*, std::set<Node*>&);
 
+    void TopologicalSort(Node*, std::set<Node*>&, std::stack<Node*>&);
+
+    bool hasCycle(Node*, std::set<Node*>&, std::set<Node*>&, std::set<Node*>&);
 
 public:
     void addNode(const std::string&);
@@ -32,22 +36,29 @@ public:
     void removeNode(const std::string&);
     void removeEdge(const std::string&, const std::string&);
 
+    // Depth First Traversals
     void depthFirstTraversalRec(const std::string&);
     void depthFirstTraversalItr(const std::string&);
 
+    // Breadth First Traversal
     void breadthFirstTraversal(const std::string&);
+
+    // Topological Sorting of Directed Acyclic DiGraph (DAG)
+    std::list<std::string> TopologicalSort();
+
+    bool hasCycle();
 
     void print();
 };
 
-void Graph::addNode(const  std::string& label) {
+void DiGraph::addNode(const  std::string& label) {
     Node* new_node = new Node(label);
 
     // add new node to list of nodes (map)
     nodes.emplace(label, new_node);
 }
 
-void Graph::addEdge(const std::string& from, const std::string& to) {
+void DiGraph::addEdge(const std::string& from, const std::string& to) {
     if (nodes.find(from) == nodes.end())
         throw std::runtime_error("Error: " + from + " node not found");
     if (nodes.find(to) == nodes.end())
@@ -58,25 +69,32 @@ void Graph::addEdge(const std::string& from, const std::string& to) {
 
 }
 
-void Graph::removeNode(const std::string& node) {
+void DiGraph::removeNode(const std::string& node) {
     if (nodes.find(node) == nodes.end())
         return;
 
+    // remove all connections of node
+    // eg. A = [B, C, D] B = [A, C, F] C=[A, F]
+    // Here, remove node C from all occurrences
     for (auto&& n : adjacencyList) {
         n.second.remove(nodes[node]);
     }
+
+    // remove node (eg. node C) from adjacenctList 
     adjacencyList.erase(nodes[node]);
+
+    // remove node (eg. node C) from list of nodes
     nodes.erase(node);
 }
 
-void Graph::removeEdge(const std::string& from, const std::string& to) {
+void DiGraph::removeEdge(const std::string& from, const std::string& to) {
     if (nodes.find(from) == nodes.end() || nodes.find(to) == nodes.end())
         return;
 
     adjacencyList[nodes[from]].remove(nodes[to]);
 }
 
-void Graph::print() {
+void DiGraph::print() {
     for (auto&& n : adjacencyList) {
         if (!n.second.empty()) {
             std::cout << n.first->label + " is connected to [ ";
@@ -88,7 +106,7 @@ void Graph::print() {
     }
 }
 
-void Graph::depthFirstTraversalRec(const std::string& root) {
+void DiGraph::depthFirstTraversalRec(const std::string& root) {
     std::set<Node*> visited;
     if (nodes.find(root) == nodes.end())
         throw std::runtime_error("Error: " + root + " node not found");
@@ -96,7 +114,7 @@ void Graph::depthFirstTraversalRec(const std::string& root) {
     depthFirstTraversalRec(nodes[root], visited);
 }
 
-void Graph::depthFirstTraversalRec(Node* root, std::set<Node*>& visited) {
+void DiGraph::depthFirstTraversalRec(Node* root, std::set<Node*>& visited) {
     std::cout << root->label << std::endl;
     visited.insert(root);
 
@@ -106,7 +124,7 @@ void Graph::depthFirstTraversalRec(Node* root, std::set<Node*>& visited) {
     }
 }
 
-void Graph::depthFirstTraversalItr(const std::string& root) {
+void DiGraph::depthFirstTraversalItr(const std::string& root) {
     // validate the root node
     if (nodes.find(root) == nodes.end())
         throw std::runtime_error("Error: " + root + " node not found");
@@ -139,7 +157,7 @@ void Graph::depthFirstTraversalItr(const std::string& root) {
     }
 }
 
-void Graph::breadthFirstTraversal(const std::string& root) {
+void DiGraph::breadthFirstTraversal(const std::string& root) {
     // validate the root node
     if (nodes.find(root) == nodes.end())
         throw std::runtime_error("Error: " + root + " node not found");
@@ -173,9 +191,97 @@ void Graph::breadthFirstTraversal(const std::string& root) {
     }
 }
 
+std::list<std::string> DiGraph::TopologicalSort() {
+    std::stack<Node*> stack;
+    std::set<Node*> visited;
+    std::list<std::string> sorted;
+
+    // depth first traversal on each node of the graph
+    for (auto&& node : nodes) {
+        TopologicalSort(node.second, visited, stack);
+    }
+
+    // pop the stack to get ordered nodes
+    while (!stack.empty()) {
+        sorted.emplace_back(stack.top()->label);
+        stack.pop();
+    }
+
+    return sorted;
+}
+
+void DiGraph::TopologicalSort(Node* node, std::set<Node*>& visited, std::stack<Node*>& stack) {
+    // check if node is already visited
+    if (visited.find(node) != visited.end())
+        return;
+
+    // If not, visit the node
+    visited.insert(node);
+
+    // then, depth first traversal on node
+    for (auto&& neighbour : adjacencyList[node]) {
+        TopologicalSort(neighbour, visited, stack);
+    }
+
+    // push the deepest node without outgoing edges or 
+    // node with neighbours already explored to stack
+    stack.push(node);
+}
+
+bool DiGraph::hasCycle() {
+    // insert nodes of graph into all set
+    std::set<Node*> all;
+    for (auto&& node : nodes) {
+        all.insert(node.second);
+    }
+
+    std::set<Node*> visiting;
+    std::set<Node*> visited;
+
+    while (!all.empty()) {
+        // get a node from all set
+        Node* current = *all.begin(); // *itr
+
+        // immediately returns true if cycle is found
+        if (hasCycle(current, all, visiting, visited))
+            return true;
+    }
+
+    // no cycle is found in graph
+    return false;
+}
+
+bool DiGraph::hasCycle(Node* node, std::set<Node*>& all,
+    std::set<Node*>& visiting, std::set<Node*>& visited) {
+    // remove node form all set and add it to visiting set
+    all.erase(node);
+    visiting.insert(node);
+
+    for (auto&& neighbour : adjacencyList[node]) {
+
+        // continuue if neighbour node is already visited
+        if (visited.find(neighbour) != visited.end())
+            continue;
+
+        // if neighbour is in visiting set, we have a cycle
+        if (visiting.find(neighbour) != visiting.end())
+            return true;
+
+        // recursively check for all neighbours
+        if (hasCycle(neighbour, all, visiting, visited))
+            return true;
+    }
+    // remove node form visiting set and add it to visited set
+    visiting.erase(node);
+    visited.insert(node);
+
+    // no cycle found in node and its neighbours
+    return false;
+}
+
 int main() {
     try {
-        Graph graph;
+        DiGraph graph;
         graph.addNode("A");
         graph.addNode("B");
         graph.addNode("C");
@@ -196,6 +302,29 @@ int main() {
 
         std::cout << "Breadth First Traversal : " << std::endl;
         graph.breadthFirstTraversal("A");
+
+
+        DiGraph dag;
+        dag.addNode("A");
+        dag.addNode("B");
+        dag.addNode("C");
+        dag.addNode("D");
+
+        dag.addEdge("A", "B");
+        dag.addEdge("A", "C");
+        dag.addEdge("B", "D");
+        dag.addEdge("C", "D");
+
+        std::cout << "Topological Sort : " << std::endl;
+        std::list<std::string> sorted = dag.TopologicalSort();
+        for (auto && node : sorted){
+            std::cout << node << std::endl;
+        }
+        
+        if (dag.hasCycle()) 
+            std::cout << "DiGraph is cyclic." << std::endl;
+        else
+            std::cout << "DiGraph is acyclic." << std::endl;
 
     }
     catch (const std::exception& e) {
