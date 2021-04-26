@@ -3,8 +3,7 @@
 #include <string>
 using namespace std;
 
-class Expression
-{
+class Expression {
 private:
     std::stack<char> operatorStack;
     std::string infix;
@@ -25,15 +24,12 @@ public:
 
 Expression::Expression(const std::string &infix) : infix(infix) {}
 
-bool Expression::checkParenthesis()
-{
+bool Expression::checkParenthesis() {
     int open = 0, close = 0;
-    for (int i = 0; infix[i] != '\0'; i++)
-    {
+    for (int i = 0; infix[i] != '\0'; i++) {
         if (infix[i] == '(')
             open++;
-        if (infix[i] == ')')
-        {
+        if (infix[i] == ')') {
             close++;
             if (close > open)
                 return false;
@@ -44,8 +40,7 @@ bool Expression::checkParenthesis()
     return false;
 }
 
-bool Expression::isValid(char ch)
-{
+bool Expression::isValid(char ch) {
     return (
         (ch >= 'a' && ch <= 'z') ||
         (ch >= 'A' && ch <= 'Z') ||
@@ -55,10 +50,8 @@ bool Expression::isValid(char ch)
         ch == '^');
 }
 
-bool Expression::validate()
-{
-    for (int i = 0; infix[i] != '\0'; i++)
-    {
+bool Expression::validate() {
+    for (int i = 0; infix[i] != '\0'; i++) {
         if (!isValid(infix[i]))
             return false;
     }
@@ -67,8 +60,7 @@ bool Expression::validate()
     return true;
 }
 
-int Expression::priorityNumber(char Operator)
-{
+int Expression::priorityNumber(char Operator) {
     if (Operator == '^')
         return 4;
     if (Operator == '*' || Operator == '/')
@@ -80,98 +72,84 @@ int Expression::priorityNumber(char Operator)
     return 0;
 }
 
-bool Expression::checkPriority(char currentOperator, char topOperator)
-{
+bool Expression::checkPriority(char currentOperator, char topOperator) {
     // returns True if priority of currentOperator is higher
     if (priorityNumber(currentOperator) > priorityNumber(topOperator))
         return true;
     // return True for right to left associativity of ^ operator
-    else if (priorityNumber(currentOperator) == priorityNumber(topOperator))
-    {
+    else if (priorityNumber(currentOperator) == priorityNumber(topOperator)) {
         if (currentOperator == '^')
             return true;
     }
     return false;
 }
 
-bool Expression::isOperand(char ch)
-{
+bool Expression::isOperand(char ch) {
     return (
         (ch >= 'a' && ch <= 'z') ||
         (ch >= 'A' && ch <= 'Z'));
 }
 
-std::string Expression::infix2postfix()
-{
+std::string Expression::infix2postfix() {
     // traverse the infix expression
-    for (int i = 0; infix[i] != '\0'; i++)
-    {
-        const char &currentChar = infix[i];
+    for (int i = 0; infix[i] != '\0'; i++) {
+        const char& currentChar = infix[i];
 
         // if character is operand, append to postfix
         if (isOperand(currentChar))
             postfix += currentChar;
 
-        else // if character is operator
-        {
-            // if operator is '('
-            if (currentChar == '(')
-            {
+        // if character is operator
+        else {
+            if (currentChar == ')') {
+                // pop the stack till '(' is encountered
+                while (operatorStack.top() != '(') {
+                    postfix += operatorStack.top();
+                    operatorStack.pop();
+                }
+                // pop the '(' from stack
+                operatorStack.pop();
+            }
+            else if (operatorStack.empty() ||       // stack is empty
+                operatorStack.top() == '(' ||       // stacktop is '('
+                currentChar == '(') {               // character is '('
                 operatorStack.push(currentChar);
-                continue;
             }
-
-            // if stack is empty and operator is not ')'
-            if (operatorStack.empty())
-            {
-                if (currentChar != ')')
-                    operatorStack.push(currentChar);
-            }
-            else
-            {
+            else {
                 // priority of currentOperator is higher than top
                 if (checkPriority(currentChar, operatorStack.top()))
                     operatorStack.push(currentChar);
 
-                else // priority of currentOperator is lower
-                {
+                else {
                     // append top element to postfix till
-                    // stack is empty or '(' is encountered.
-                    while (!operatorStack.empty())
-                    {
-                        if (operatorStack.top() == '(')
-                        {
-                            operatorStack.pop();
-                            break;
-                        }
+					// stack is empty or '(' is encountered.
+                    while (!operatorStack.empty() &&
+                        operatorStack.top() != '(' &&
+                        !checkPriority(currentChar, operatorStack.top())) {
+
                         postfix += operatorStack.top();
                         operatorStack.pop();
                     }
-
-                    // finally push current operator other than ')' to stack
-                    if (currentChar != ')')
-                        operatorStack.push(currentChar);
+                    // finally push current operator to stack
+                    operatorStack.push(currentChar);
                 }
             }
         }
     }
 
     // transfer remaining items in stack to postfix
-    while (!operatorStack.empty())
-    {
+    while (!operatorStack.empty()) {
         postfix += operatorStack.top();
         operatorStack.pop();
     }
     return postfix;
 }
 
-int main()
-{
-    //std::string infix_expression = "(a^b*(c+(d*e)-f))/g";
-    std::string infix_expression = "a^b^c";
+int main() {
+    // std::string infix_expression = "(a^b*(c+(d*e)-f))/g";
+    std::string infix_expression = "k+l-m*n+(o^p)*w/u/v*t+q^j^a";
     Expression e1(infix_expression);
-    if (!e1.validate())
-    {
+    if (!e1.validate()) {
         cout << "Invalid expression" << endl;
         return -1;
     }

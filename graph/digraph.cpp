@@ -1,3 +1,5 @@
+// Directed Graph
+
 #include <iostream>
 #include <exception>
 #include <string>
@@ -66,7 +68,6 @@ void DiGraph::addEdge(const std::string& from, const std::string& to) {
 
     // add "to node" to "from node" list as its adjacent node
     adjacencyList[nodes[from]].push_back(nodes[to]);
-
 }
 
 void DiGraph::removeNode(const std::string& node) {
@@ -259,7 +260,7 @@ bool DiGraph::hasCycle(Node* node, std::set<Node*>& all,
 
     for (auto&& neighbour : adjacencyList[node]) {
 
-        // continuue if neighbour node is already visited
+        // continue if neighbour node is already visited
         if (visited.find(neighbour) != visited.end())
             continue;
 
@@ -303,7 +304,7 @@ int main() {
         std::cout << "Breadth First Traversal : " << std::endl;
         graph.breadthFirstTraversal("A");
 
-
+        /******************** Directed Acyclic Graph ********************/
         DiGraph dag;
         dag.addNode("A");
         dag.addNode("B");
@@ -315,13 +316,16 @@ int main() {
         dag.addEdge("B", "D");
         dag.addEdge("C", "D");
 
+        /******************** Topological Sorting ********************/
         std::cout << "Topological Sort : " << std::endl;
         std::list<std::string> sorted = dag.TopologicalSort();
         for (auto && node : sorted){
             std::cout << node << std::endl;
         }
-        
-        if (dag.hasCycle()) 
+
+        /******************** Cycle Detection (Directed Graph) ********************/
+        std::cout << "\nCycle Detection (Directed Graph) " << std::endl;
+        if (dag.hasCycle())
             std::cout << "DiGraph is cyclic." << std::endl;
         else
             std::cout << "DiGraph is acyclic." << std::endl;
